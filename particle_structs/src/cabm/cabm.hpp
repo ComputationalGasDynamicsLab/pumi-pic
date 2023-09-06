@@ -115,6 +115,8 @@ namespace pumipic {
     kkLidView offsets; 
     // parent elements for each SoA
     kkLidView parentElms_;
+    // True: use aosoa_swap when rebuiling
+    bool use_swap;
     // particle data
     AoSoA_t* aosoa_;
     // extra AoSoA copy for swapping (same size as aosoa_)
@@ -160,6 +162,7 @@ namespace pumipic {
     if(!comm_rank)
       fprintf(stderr, "building CabM\n");
 
+    use_swap = false;
     // build view of offsets for SoA indices within particle elements
     offsets = buildOffset(particles_per_element, num_ptcls, extra_padding, padding_start);
     // set num_soa_ from the last entry of offsets
@@ -168,7 +171,7 @@ namespace pumipic {
     capacity_ = num_soa_*AoSoA_t::vector_length;
     // initialize appropriately-sized AoSoA and copy for swapping
     aosoa_ = makeAoSoA(capacity_, num_soa_);
-    aosoa_swap = makeAoSoA(capacity_, num_soa_);
+    if (use_swap) aosoa_swap = makeAoSoA(capacity_, num_soa_);
     // get array of parents element indices for particles
     parentElms_ = getParentElms(num_elems, num_soa_, offsets);
     // set active mask
@@ -202,6 +205,7 @@ namespace pumipic {
     if(!comm_rank)
       fprintf(stderr, "building CabM for %s\n", name.c_str());
     
+    use_swap = false;
     // build view of offsets for SoA indices within particle elements
     offsets = buildOffset(input.ppe, num_ptcls, extra_padding, padding_start);
     // set num_soa_ from the last entry of offsets
@@ -210,7 +214,7 @@ namespace pumipic {
     capacity_ = num_soa_*AoSoA_t::vector_length;
     // initialize appropriately-sized AoSoA and copy for swapping
     aosoa_ = makeAoSoA(capacity_, num_soa_);
-    aosoa_swap = makeAoSoA(capacity_, num_soa_);
+    if (use_swap) aosoa_swap = makeAoSoA(capacity_, num_soa_);
     // get array of parents element indices for particles
     parentElms_ = getParentElms(num_elems, num_soa_, offsets);
     // set active mask
@@ -228,7 +232,7 @@ namespace pumipic {
   template <class DataTypes, typename MemSpace>
   CabM<DataTypes, MemSpace>::~CabM() {
     delete aosoa_;
-    delete aosoa_swap;
+    if (use_swap) delete aosoa_swap;
   }
 
   /**
