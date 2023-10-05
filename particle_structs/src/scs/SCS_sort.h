@@ -1,5 +1,11 @@
 #pragma once
 namespace pumipic {
+  struct ReverseComparator {
+    KOKKOS_FUNCTION constexpr bool operator()(const lid_t& a, const lid_t& b) const {
+        return a > b; //a precedes b if a is larger
+    }
+  };
+
   template <class DataTypes, typename MemSpace>
     void SellCSigma<DataTypes, MemSpace>::sigmaSort(kkLidView& ptcls,
                                                     kkLidView& index,
@@ -15,6 +21,7 @@ namespace pumipic {
         index(i) = i;
       });
 
+      ReverseComparator comp;
       lid_t n_sigma = num_elems/sigma;
       Kokkos::parallel_for( PolicyType(n_sigma, 1), KOKKOS_LAMBDA(const TeamMem& t){
         lid_t start = t.league_rank() * sigma;
@@ -22,7 +29,7 @@ namespace pumipic {
         auto range = Kokkos::make_pair(start, end);
         auto ptcl_subview = Kokkos::subview(ptcls, range);
         auto index_subview = Kokkos::subview(index, range);
-        Kokkos::Experimental::sort_by_key_thread(t, ptcl_subview, index_subview);
+        Kokkos::Experimental::sort_by_key_thread(t, ptcl_subview, index_subview, comp);
       });
     }
     else {
