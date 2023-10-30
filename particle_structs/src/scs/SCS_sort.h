@@ -22,10 +22,11 @@ namespace pumipic {
       });
 
       ReverseComparator comp;
-      lid_t n_sigma = num_elems/sigma;
+      lid_t sigmaOrMax = std::min(sigma, num_elems);
+      lid_t n_sigma = num_elems/sigmaOrMax;
       Kokkos::parallel_for( PolicyType(n_sigma, 1), KOKKOS_LAMBDA(const TeamMem& t){
-        lid_t start = t.league_rank() * sigma;
-        lid_t end = (t.league_rank() == n_sigma-1) ? num_elems : start + sigma;
+        lid_t start = t.league_rank() * sigmaOrMax;
+        lid_t end = (t.league_rank() == n_sigma-1) ? num_elems : start + sigmaOrMax;
         auto range = Kokkos::make_pair(start, end);
         auto ptcl_subview = Kokkos::subview(ptcls, range);
         auto index_subview = Kokkos::subview(index, range);
