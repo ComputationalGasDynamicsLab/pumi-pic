@@ -22,7 +22,7 @@ namespace pumipic {
       });
 
       ReverseComparator comp;
-      lid_t sigmaOrMax = std::min(sigma, num_elems);
+      lid_t sigmaOrMax = std::min(sigma, std::max(num_elems, 1));
       lid_t n_sigma = num_elems/sigmaOrMax;
       Kokkos::parallel_for( PolicyType(n_sigma, 1), KOKKOS_LAMBDA(const TeamMem& t){
         lid_t start = t.league_rank() * sigmaOrMax;
